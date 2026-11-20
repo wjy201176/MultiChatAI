@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MultiChatAI</title>
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body>
+    <!-- Icon sprite: every SVG in the UI is a <use> pointing at a symbol below. -->
+    <svg class="sprite" aria-hidden="true" focusable="false">
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+      <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" /></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></symbol>
+      <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z" /></symbol>
+      <symbol id="i-clip" viewBox="0 0 24 24"><path d="M21 11.5l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8" /></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h8" /></symbol>
+      <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6" /><path d="M20 4l-8.5 8.5" /><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" /></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6" /><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13" /><path d="M9 7V4h6v3" /></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6" /></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.6 6" /><path d="M20 4v7h-7" /></symbol>
+      <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" /><path d="M11 12l9-9 2 2-3 3 2 2-3 3-2-2-2 2" /></symbol>
+      <symbol id="i-login" viewBox="0 0 24 24"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" /><path d="M10 16l4-4-4-4" /><path d="M14 12H4" /></symbol>
+      <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" /></symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H8l-5 3 1.2-4.4A8 8 0 1 1 21 12z" /></symbol>
+      <symbol id="i-summary" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" /><path d="M14 3v5h5" /><path d="M9 12h6M9 16h4" /></symbol>
+    </svg>
+
+    <div class="app" id="app-root">
+      <!-- ───────────────────────── Left sidebar ───────────────────────── -->
+      <aside class="sidebar" id="sidebar">
+        <!-- View 1: conversations + configured models -->
+        <div class="sidebar-view" id="view-chat">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span class="brand-name">MultiChatAI</span>
+          </div>
+
+          <button id="new-chat" class="btn-new-chat" type="button">
+            <svg class="ico" aria-hidden="true"><use href="#i-plus" /></svg>
+            <span>New chat</span>
+          </button>
+
+          <section class="history" aria-label="History">
+            <div class="history-head">
+              <span>History</span>
+              <span class="history-count" id="history-count">0</span>
+            </div>
+            <ul class="history-list" id="history-list"></ul>
+          </section>
+
+          <section class="sidebar-models" aria-label="Models">
+            <div class="sidebar-models-head">
+              <span>Models</span>
+              <button class="sidebar-models-add" id="add-model-shortcut" type="button" title="Add or remove models">
+                <svg class="ico" aria-hidden="true"><use href="#i-plus" /></svg>
+              </button>
+            </div>
+            <div id="sidebar-model-list"></div>
+          </section>
+
+          <div class="sidebar-foot">
+            <button id="settings-btn" class="btn-settings" type="button">
+              <svg class="ico" aria-hidden="true"><use href="#i-settings" /></svg>
+              <span>Settings</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- View 2: settings, in the sidebar (Models / General / About) -->
+        <div class="sidebar-view sidebar-view-settings" id="view-settings" hidden>
+          <header class="settings-head">
+            <button class="icon-btn" id="settings-back" type="button" title="Back to chats" aria-label="Back to chats">
+              <svg class="ico" aria-hidden="true"><use href="#i-back" /></svg>
+            </button>
+            <h2 class="settings-title">Settings</h2>
+          </header>
+          <nav class="settings-tabs" id="settings-nav" aria-label="Settings sections"></nav>
+          <div class="settings-body" id="settings-body"></div>
+        </div>
+      </aside>
+
+      <!-- ───────────────────────── Main chat area ───────────────────────── -->
+      <main class="main">
+        <header class="main-head">
+          <div class="main-head-text">
+            <h1 class="main-title" id="conversation-title">New chat</h1>
+            <p class="main-sub" id="conversation-meta">Add a model in Settings → Models, then ask once.</p>
+          </div>
+          <div class="main-head-actions">
+            <!-- The model that writes the summary; the first column by default. -->
+            <label
+              class="summarize-model"
+              id="summarize-model-chip"
+              title="The model that writes the summary. It is asked in its own chat, so its thread shows the prompt."
+              hidden
+            >
+              <svg class="ico" aria-hidden="true"><use href="#i-summary" /></svg>
+              <span class="summarize-model-label">Summary by</span>
+              <select id="summarize-model" aria-label="Model that writes the summary"></select>
+            </label>
+            <button id="stop-btn" class="btn-stop" type="button" hidden>
+              <svg class="ico" aria-hidden="true"><use href="#i-stop" /></svg>
+              <span>Stop</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="columns-scroll" id="columns-scroll">
+          <div class="columns" id="columns"></div>
+
+          <!-- Summary of this round: consensus bullets, a per-model table, chat links -->
+          <section class="summary" id="summary-panel" aria-label="Summary" hidden>
+            <header class="summary-head">
+              <div class="summary-head-text">
+                <h2 class="summary-title">Summary</h2>
+                <p class="summary-sub" id="summary-sub"></p>
+              </div>
+              <div class="summary-tools">
+                <div class="segmented" id="summary-scope" role="group" aria-label="What to summarise">
+                  <button type="button" data-scope="round" aria-pressed="true">This round</button>
+                  <button type="button" data-scope="chat" aria-pressed="false">Whole chat</button>
+                </div>
+                <button class="btn btn-sm" id="summary-again" type="button" title="Ask the model again" hidden>
+                  Ask again
+                </button>
+                <button class="btn btn-sm" id="summary-stop" type="button" title="Cancel this summary" hidden>
+                  Cancel
+                </button>
+                <button class="btn btn-sm" id="summary-copy" type="button" title="Copy this summary as Markdown">
+                  Copy
+                </button>
+                <button
+                  class="icon-btn"
+                  id="summary-close"
+                  type="button"
+                  title="Back to the answers (Esc)"
+                  aria-label="Back to the answers"
+                >
+                  <svg class="ico" aria-hidden="true"><use href="#i-x" /></svg>
+                </button>
+              </div>
+            </header>
+            <div class="summary-body" id="summary-body"></div>
+          </section>
+
+          <div class="empty-state" id="empty-state">
+            <div class="empty-icon">
+              <svg class="ico" aria-hidden="true"><use href="#i-chat" /></svg>
+            </div>
+            <h2>Please add a model</h2>
+            <p>
+              MultiChatAI sends your prompt to every model you added and shows the answers in
+              equal columns side by side. Add at least one model to use the input box below.
+            </p>
+            <ol class="empty-steps">
+              <li>Open <strong>Settings → Models</strong> in the sidebar and add ChatGPT, Gemini, Claude, DeepSeek, Grok…</li>
+              <li>Sign in with your own account (browser session) or paste an API key.</li>
+              <li>The model appears above the input box as its own column.</li>
+            </ol>
+            <button class="btn-primary" id="empty-open-settings" type="button">Add a model</button>
+          </div>
+        </div>
+
+        <footer class="composer">
+          <div class="attachments" id="attachments" hidden></div>
+          <div class="composer-box">
+            <textarea
+              id="prompt"
+              rows="1"
+              placeholder="Ask every selected model the same question…"
+              autocomplete="off"
+              spellcheck="false"
+            ></textarea>
+            <div class="composer-bar">
+              <label class="btn-attach" title="Attach files">
+                <input type="file" id="file-input" multiple hidden />
+                <svg class="ico" aria-hidden="true"><use href="#i-clip" /></svg>
+                <span class="sr-only">Attach files</span>
+              </label>
+              <span class="composer-hint">Enter to send · Shift+Enter for a new line</span>
+              <button id="send-btn" class="btn-send" type="button">
+                <svg class="ico" aria-hidden="true"><use href="#i-send" /></svg>
+                <span>Send</span>
+              </button>
+              <button id="summarize-btn" class="btn-summarize" type="button" aria-pressed="false">
+                <svg class="ico" aria-hidden="true"><use href="#i-summary" /></svg>
+                <span>Summarize</span>
+              </button>
+            </div>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
