@@ -378,7 +378,7 @@ export async function runWebModel({
   const [tab] = await findProviderTabs(provider);
   if (!tab) {
     const error = new Error(`No ${provider.label} tab is open.`);
-    error.hint = `This model is set to “existing tab”. Open ${provider.homeUrl} once and keep it open, switch the model to “embedded”, or use API-key mode.`;
+    error.hint = `This model is set to “Existing tab”, so it drives a ${provider.label} tab instead of a panel. Open one below, or switch it to the embedded panel — either is one click.`;
     throw error;
   }
 

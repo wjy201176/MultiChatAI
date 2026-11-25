@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "MultiChatAI",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "description": "Ask several AI models the same question at once and compare their answers side by side in one window.",
   "minimum_chrome_version": "116",
   "icons": {

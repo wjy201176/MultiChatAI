@@ -16,7 +16,7 @@ import {
   availableModes,
   getProvider,
 } from '../../shared/providers.js';
-import { escapeHtml } from '../util.js';
+import { escapeHtml, toast } from '../util.js';
 
 const SECTIONS = [
   { id: 'models', label: 'Models' },
@@ -172,19 +172,20 @@ export class SettingsView {
     }
   }
 
-  #modeOptions(providerId) {
+  #modeOptions(providerId, selected = '') {
     const provider = getProvider(providerId);
     const modes = provider ? availableModes(provider) : [MODE_EMBED];
     const label = provider ? provider.label : 'provider';
     return modes
       .map((mode) => {
+        const chosen = mode === selected ? ' selected' : '';
         if (mode === MODE_EMBED) {
-          return `<option value="${MODE_EMBED}">Embedded web chat — free, inside the column</option>`;
+          return `<option value="${MODE_EMBED}"${chosen}>Embedded web chat — free, inside the column</option>`;
         }
         if (mode === MODE_API) {
-          return `<option value="${MODE_API}">API key — direct calls, no page</option>`;
+          return `<option value="${MODE_API}"${chosen}>API key — direct calls, no page</option>`;
         }
-        return `<option value="${MODE_WEB}">Existing tab — reuse a ${escapeHtml(label)} tab you opened</option>`;
+        return `<option value="${MODE_WEB}"${chosen}>Existing tab — reuse a ${escapeHtml(label)} tab you opened</option>`;
       })
       .join('');
   }
@@ -281,6 +282,14 @@ export class SettingsView {
               isApi ? (keyOptional ? 'Local server' : 'No key yet') : isEmbed ? 'Embedded panel' : 'Status unknown'
             }
           </span>
+        </div>
+        <div class="model-row">
+          <div class="field">
+            <label for="mode-${model.id}">Connection</label>
+            <select id="mode-${model.id}" data-act="model-mode" data-model="${model.id}">
+              ${this.#modeOptions(model.providerId, model.mode)}
+            </select>
+          </div>
         </div>
         ${controls}
       </li>`;
@@ -460,6 +469,29 @@ export class SettingsView {
       this.addProvider = /** @type {HTMLSelectElement} */ (input).value;
       const modeSelect = this.bodyEl.querySelector('[data-act="add-mode"]');
       if (modeSelect) modeSelect.innerHTML = this.#modeOptions(this.addProvider);
+      return;
+    }
+
+    /*
+     * Change how an existing model is reached. This used to be impossible: the
+     * connection was fixed when the model was added, so a model stuck in “existing
+     * tab” could only be fixed by deleting and re-adding it.
+     */
+    if (act === 'model-mode') {
+      const modelId = input.getAttribute('data-model') || '';
+      const mode = /** @type {HTMLSelectElement} */ (input).value;
+      const model = this.actions.getModels().find((entry) => entry.id === modelId);
+      if (!model || model.mode === mode) return;
+      await this.actions.updateModel(modelId, { mode });
+      const where =
+        mode === MODE_EMBED
+          ? 'inside its column'
+          : mode === MODE_API
+            ? 'through its API key, no page'
+            : 'through a provider tab you keep open';
+      toast(`${model.label || model.providerId}: now answered ${where}`, 'ok', 5000);
+      // The card's badge and note depend on the mode: repaint this panel.
+      this.show(this.section);
       return;
     }
 

@@ -38,12 +38,14 @@ export class ColumnBoard {
    * @param {(descriptor: ColumnDescriptor, text: string) => void} options.onCopy
    * @param {(descriptor: ColumnDescriptor) => void} options.onOpen
    */
-  constructor({ root, emptyEl, onCopy, onOpen, onSwitchTab, onOpenLive, onFocusChange }) {
+  constructor({ root, emptyEl, onCopy, onOpen, onSwitchTab, onSwitchEmbed, onOpenTab, onOpenLive, onFocusChange }) {
     this.root = root;
     this.emptyEl = emptyEl;
     this.onCopy = onCopy;
     this.onOpen = onOpen;
     this.onSwitchTab = onSwitchTab;
+    this.onSwitchEmbed = onSwitchEmbed;
+    this.onOpenTab = onOpenTab;
     this.onOpenLive = onOpenLive;
     this.onFocusChange = onFocusChange;
     /** Key of the column shown full-width, or '' for the normal board. */
@@ -64,6 +66,8 @@ export class ColumnBoard {
       else if (btn.dataset.act === 'open') this.onOpen(rec.descriptor);
       else if (btn.dataset.act === 'reload-embed') this.reload(rec.descriptor.key);
       else if (btn.dataset.act === 'switch-tab') this.onSwitchTab?.(rec.descriptor);
+      else if (btn.dataset.act === 'switch-embed') this.onSwitchEmbed?.(rec.descriptor);
+      else if (btn.dataset.act === 'open-tab') this.onOpenTab?.(rec.descriptor);
       else if (btn.dataset.act === 'open-thread') this.openThread(rec.descriptor.key);
       else if (btn.dataset.act === 'focus') this.toggleFocus(rec.descriptor.key);
       else if (btn.dataset.act === 'open-live') this.openLive(rec.descriptor.key);
@@ -670,9 +674,24 @@ export class ColumnBoard {
       rec.errorEl.className = 'column-error';
       rec.answer.appendChild(rec.errorEl);
     }
+    /*
+     * A column whose model drives a tab fails here whenever no such tab is open.
+     * That is fixable in one click — open the tab, or go back to the embedded
+     * panel — so the error carries the buttons instead of only prose.
+     */
+    const tabModeActions =
+      rec.descriptor.mode === 'web'
+        ? `<span class="column-error-actions">
+             <button class="btn btn-sm" type="button" data-act="open-tab">Open a ${escapeHtml(
+               rec.descriptor.name,
+             )} tab</button>
+             <button class="btn btn-sm" type="button" data-act="switch-embed">Use the embedded panel</button>
+           </span>`
+        : '';
     rec.errorEl.innerHTML =
       escapeHtml(message || 'Something went wrong.') +
-      (hint ? `<span class="column-error-hint">${escapeHtml(hint)}</span>` : '');
+      (hint ? `<span class="column-error-hint">${escapeHtml(hint)}</span>` : '') +
+      tabModeActions;
     rec.placeholder.hidden = true;
     this.setStatus(key, rec.rawText ? 'done' : 'error', rec.rawText ? 'Partial answer' : 'Failed');
     if (!rec.rawText) {

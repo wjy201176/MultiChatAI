@@ -846,8 +846,17 @@ function renderBoard({ rebuild = false } = {}) {
        */
       const live = frameState.get(descriptor.key);
       const signedOut = Boolean(live && live.signedIn === false);
+      /*
+       * A saved copy is only worth showing when there is one. If this turn has no
+       * answer for that model (it failed, was stopped, or the model was just
+       * switched from “existing tab” to embedded), hiding the live page would leave
+       * the column showing “nothing saved” instead of the provider's own chat.
+       */
+      const answer = turn && turn.answers ? turn.answers[descriptor.key] : null;
+      const hasSavedCopy = Boolean(answer && (answer.html || String(answer.text || '').trim()));
+
       if (threadUrl && !signedOut) board.restoreThread(descriptor.key, threadUrl);
-      else board.showSnapshot(descriptor.key, conv.turns, threadUrl);
+      else if (hasSavedCopy) board.showSnapshot(descriptor.key, conv.turns, threadUrl);
     }
   }
 
@@ -1947,6 +1956,25 @@ async function switchEmbedToTab(descriptor) {
   openProvider(model.providerId, { active: true });
 }
 
+/**
+ * The way back: a model that drives a tab (or was set to one by mistake) becomes
+ * an embedded panel again — one click, one model.
+ *
+ * Only this column is rebuilt (`ColumnBoard.sync` recreates a column whose mode
+ * changed), so the answers on the other columns stay exactly as they are.
+ */
+async function switchTabToEmbed(descriptor) {
+  const model = store.getModel(descriptor.key);
+  if (!model) return;
+  const provider = getProvider(model.providerId);
+  if (!(provider && provider.web)) {
+    toast(`${model.label} has no web chat to embed — use API-key mode for it.`, 'error', 6000);
+    return;
+  }
+  await store.updateModel(descriptor.key, { mode: 'embed' });
+  toast(`${model.label}: its chat now loads inside the column — sign in there once`, 'ok', 6000);
+}
+
 function openProvider(providerId, options = {}) {
 
   const provider = getProvider(providerId);
@@ -2235,6 +2263,8 @@ async function boot() {
     },
     onOpen: (descriptor) => openProvider(descriptor.providerId, { active: true }),
     onSwitchTab: (descriptor) => void switchEmbedToTab(descriptor),
+    onSwitchEmbed: (descriptor) => void switchTabToEmbed(descriptor),
+    onOpenTab: (descriptor) => openProvider(descriptor.providerId, { active: true }),
     onOpenLive: (descriptor) => {
       mountEmbeds(buildColumnDescriptors().filter((entry) => entry.key === descriptor.key));
     },

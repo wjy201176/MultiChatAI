@@ -126,7 +126,14 @@ with an actionable hint when there is none.
     touches a surviving column's body. Model-list edits use this, so removing a model cannot
     disturb the answers already on screen (the e2e test asserts the surviving column keeps
     the exact same DOM node and answer text).
-- **Switching topics never navigates a panel.** `ColumnBoard.render()` reconciles like
+- **A model's connection can change at any time.** Every card in Settings → Models renders
+  the same mode list the add form uses (`#modeOptions(providerId, selected)`), and changing it
+  calls `updateModel({mode})`; `ColumnBoard.#reconcile` rebuilds *only* the column whose mode
+  changed, so the other columns keep their answers. A tab-mode column that fails because no
+  provider tab is open draws its two fixes inside the error (`fail()` → `data-act="open-tab"`
+  / `"switch-embed"`). `renderBoard()` falls back to a saved copy only when that turn actually
+  has one for that model, so a column that just became embedded shows its live page instead of
+  a “nothing saved” placeholder.- **Switching topics never navigates a panel.** `ColumnBoard.render()` reconciles like
   `sync()` instead of wiping the DOM: columns whose model is still there are **reused**, so
   opening an old topic (which paints the saved answer over the live page) or pressing
   **New chat** leaves every embedded `<iframe>` exactly where it was. Recreating a column

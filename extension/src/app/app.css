@@ -1162,6 +1162,24 @@ kbd {
   color: var(--text-dim);
 }
 
+/* The error is fixable in one click: the buttons that do it sit inside it. */
+.column-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.column-error-actions .btn {
+  color: var(--text);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border-strong);
+}
+
+.column-error-actions .btn:hover {
+  background: var(--bg-hover);
+}
+
 /* ────────────────────────── Rendered answer ────────────────────────── */
 
 .answer {

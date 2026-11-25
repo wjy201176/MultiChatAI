@@ -103,6 +103,11 @@ Drives a provider tab you have already opened. MultiChatAI never creates one.
 
 - **Settings without leaving the window.** The sidebar swaps between the chat list and the
   settings panel; adding a model updates the board behind it instantly.
+- **A model's connection can change later.** Every card in Settings → Models has a
+  **Connection** dropdown (Embedded web chat / Existing tab / API key), so a model added in the
+  wrong mode is fixed without deleting and re-adding it — and only that model's column is
+  rebuilt. A column set to “existing tab” that has no tab to drive says so and offers
+  **Open a … tab** and **Use the embedded panel** right inside the message.
 - **Columns follow the model list.** Removing (or unchecking) a model drops its column
   immediately and **in place** — the other columns keep their answers and scroll position
   and simply get wider.
@@ -182,7 +187,7 @@ Permissions, one by one:
 ```bash
 node scripts/validate.mjs        # manifest, paths, syntax, CSP, icons
 node scripts/smoke-test.mjs      # boots the UI in headless Edge (16 checks, offline)
-node scripts/e2e-test.mjs        # mock provider round trip (52 checks, offline)
+node scripts/e2e-test.mjs        # mock provider round trip (56 checks, offline)
 node scripts/embed-test.mjs      # real provider framed inside a column (23 checks, needs internet)
 node scripts/test-completion.mjs # bridge: when is the page ready again? (12 cases, offline)
 node scripts/test-run-policy.mjs # app: readiness settle + deadlines (13 cases, offline)
@@ -228,7 +233,7 @@ Everything is dependency-free (Node ≥ 20 for the tests, Pillow only for icons)
 | Column says “Not usable here” | That provider refuses to be framed (DeepSeek's CDN does). Click **Use a tab instead** — one click switches the model to tab mode and opens the site — or use an API key |
 | “This page did not load inside the panel” | Press **⟳** in the column; if it persists, use **Use a tab instead** |
 | Grok: “your network or security software is blocking Grok's real-time connection” | Grok needs a WebSocket to grok.com. Test grok.com in a normal tab: same text ⇒ your network blocks it (nothing an extension can do); works in a tab ⇒ switch that model to **Use a tab instead** |
-| Column says “No ChatGPT tab is open” | That model is in “existing tab” mode — switch it to “Embedded”, or keep the tab open |
+| Column says “No ChatGPT tab is open” | That model is in “existing tab” mode. Press **Use the embedded panel** right in that column (or **Open a ChatGPT tab** to keep a tab), or change *Settings → Models → Connection* — no need to remove and re-add the model |
 | “No API key saved for …” | Settings → Models → paste key → Save key → Test |
 | API error 401/403 / 404 | Key invalid / model name wrong for your account |
 | Nothing appears in a column | Reload the panel with ⟳, then reload the extension |

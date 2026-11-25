@@ -7,7 +7,7 @@ window pops up on your desktop, and no real provider is contacted.
 ```bash
 node scripts/validate.mjs        # static checks
 node scripts/smoke-test.mjs      # UI boots (16 checks)
-node scripts/e2e-test.mjs        # mock-provider round trip (52 checks)
+node scripts/e2e-test.mjs        # mock-provider round trip (56 checks)
 node scripts/embed-test.mjs      # real provider framed in a column (23 checks, needs internet)
 node scripts/probe-embed.mjs     # proves the framing-header technique (3 scenarios)
 node scripts/test-completion.mjs # bridge completion logic (12 cases, offline)
@@ -18,7 +18,7 @@ node scripts/check-signin.mjs    # what a provider page offers as a sign-in cont
 node scripts/screenshot.mjs      # regenerate docs/screenshot-*.png
 ```
 
-Current status: **static ✓ · 16/16 smoke · 52/52 e2e · 23/23 embed · 12/12 completion ·
+Current status: **static ✓ · 16/16 smoke · 56/56 e2e · 23/23 embed · 12/12 completion ·
 13/13 run-policy · 21/21 providers · 16/16 summary-request**.
 
 ## `validate.mjs` — static checks
@@ -270,9 +270,17 @@ lines), which is what the summary checks below line up.
 48. a browser-session model becomes a **Tab** column
 49. **sending to a browser-session model opens no tab** (tab count unchanged)
 50. that column explains no tab is open instead of opening one
-51. **New chat stops a running answer instead of refusing** — with a slow model still
+51. **a tab-mode error offers both fixes in place** — “Open a ChatGPT tab” and
+    “Use the embedded panel”, inside the error itself
+52. **“Use the embedded panel”** turns that column into the provider page (an
+    `chatgpt.com` iframe) without opening a tab
+53. **each model card has a Connection dropdown** (so a model added as a tab can be
+    changed later instead of being deleted and re-added)
+54. **the Connection dropdown switches an existing model** (embed → tab) and the
+    column follows
+55. **New chat stops a running answer instead of refusing** — with a slow model still
     streaming, New chat empties the window, hides Stop and re-enables Send
-52. no console errors or exceptions
+56. no console errors or exceptions
 
 What is *not* covered automatically, because it needs a real signed-in account:
 driving chatgpt.com / claude.ai / … in browser-session mode. That path is verified by hand

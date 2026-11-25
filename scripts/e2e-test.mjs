@@ -907,6 +907,93 @@ async function run() {
       webColumnText.replaceAll('\n', ' ').slice(0, 100),
     );
 
+    /* ── 12b. a tab-mode column can go back to the embedded panel ────────── */
+    const recovery = JSON.parse(
+      await cdp.evaluate(`(() => {
+        const column = document.querySelector('.column:nth-child(2)');
+        return JSON.stringify({
+          openTab: !!column.querySelector('[data-act="open-tab"]'),
+          switchEmbed: !!column.querySelector('[data-act="switch-embed"]')
+        });
+      })()`),
+    );
+    checks.record(
+      'a tab-mode error offers both fixes in place',
+      recovery.openTab && recovery.switchEmbed,
+      `open-tab=${recovery.openTab}, switch-embed=${recovery.switchEmbed}`,
+    );
+
+    const tabsBeforeSwitch = await cdp.evaluate(tabCount, true);
+    await cdp.evaluate(`document.querySelector('.column:nth-child(2) [data-act="switch-embed"]').click()`);
+    const switched = await waitFor(
+      async () =>
+        cdp.evaluate(`(() => {
+           const column = document.querySelector('.column:nth-child(2)');
+           const frame = column ? column.querySelector('iframe') : null;
+           const src = frame ? frame.getAttribute('src') || '' : '';
+           return column && column.classList.contains('is-embed') && /chatgpt\\.com/.test(src)
+             ? JSON.stringify({ embed: true, src })
+             : null;
+         })()`),
+      20000,
+      250,
+    );
+    const tabsAfterSwitch = await cdp.evaluate(tabCount, true);
+    checks.record(
+      '“Use the embedded panel” turns that column into the provider page, without a tab',
+      Boolean(switched) && tabsAfterSwitch === tabsBeforeSwitch,
+      switched ? `src=${JSON.parse(switched).src}` : 'no iframe',
+    );
+
+    /* The same switch exists on the card, for models that were added as a tab. */
+    await cdp.evaluate(`document.getElementById('settings-btn').click()`);
+    await sleep(400);
+    const cardMode = JSON.parse(
+      await cdp.evaluate(`(() => {
+        const select = document.querySelector('.model-card:nth-child(2) [data-act="model-mode"]');
+        return JSON.stringify({
+          hasSelect: Boolean(select),
+          value: select ? select.value : '',
+          options: select ? Array.from(select.options).map((option) => option.value) : []
+        });
+      })()`),
+    );
+    checks.record(
+      'each model card has a Connection dropdown',
+      cardMode.hasSelect &&
+        cardMode.value === 'embed' &&
+        cardMode.options.includes('embed') &&
+        cardMode.options.includes('web'),
+      `${cardMode.value} of ${cardMode.options.join('/')}`,
+    );
+
+    await cdp.evaluate(`(() => {
+      const select = document.querySelector('.model-card:nth-child(2) [data-act="model-mode"]');
+      select.value = 'web';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    })()`);
+    await sleep(700);
+    const backToTab = JSON.parse(
+      await cdp.evaluate(`(() => {
+        const column = document.querySelector('.column:nth-child(2)');
+        const select = document.querySelector('.model-card:nth-child(2) [data-act="model-mode"]');
+        return JSON.stringify({
+          embed: column ? column.classList.contains('is-embed') : null,
+          badge: (document.querySelectorAll('.model-card .mode-badge')[1] || {}).dataset
+            ? document.querySelectorAll('.model-card .mode-badge')[1].dataset.mode
+            : '',
+          select: select ? select.value : ''
+        });
+      })()`),
+    );
+    await cdp.evaluate(`document.getElementById('settings-back').click()`);
+    await sleep(250);
+    checks.record(
+      'the Connection dropdown switches an existing model back',
+      backToTab.embed === false && backToTab.badge === 'web' && backToTab.select === 'web',
+      `embed=${backToTab.embed}, badge=${backToTab.badge}, select=${backToTab.select}`,
+    );
+
     /* ── 13. New chat works even while a model is still answering ───────── */
     // The reported bug: with an answer in flight, New chat refused to do anything
     // (it waited for a `final` that a slow model may take minutes to send).
